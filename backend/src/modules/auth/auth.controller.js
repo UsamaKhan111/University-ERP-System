@@ -30,19 +30,8 @@ const getProfile = asyncHandler(async (req, res) => {
   });
 });
 
-// For development/demo purposes only: ensure demo accounts exist and return their credentials.
-const getDemoCredentials = asyncHandler(async (req, res) => {
-  const creds = await authService.ensureDemoAccounts();
-
-  res.status(200).json({
-    success: true,
-    data: creds
-  });
-});
-
 module.exports = {
   getProfile,
   login,
-  register,
-  getDemoCredentials
+  register
 };

@@ -187,18 +187,33 @@ const CoursesPage = () => {
           <form className="rounded border border-stone-200 bg-white p-4 shadow-panel" onSubmit={createCourse}>
             <h2 className="text-base font-semibold text-ink">Create Course</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <input className="rounded border border-stone-300 px-3 py-2 text-sm" name="title" value={courseForm.title} onChange={handleCourseFormChange} placeholder="Course title" required />
-              <input className="rounded border border-stone-300 px-3 py-2 text-sm" name="courseCode" value={courseForm.courseCode} onChange={handleCourseFormChange} placeholder="Course code" required />
-              <input className="rounded border border-stone-300 px-3 py-2 text-sm" min="1" max="12" name="semester" type="number" value={courseForm.semester} onChange={handleCourseFormChange} required />
-              <input className="rounded border border-stone-300 px-3 py-2 text-sm" min="1" max="6" name="creditHours" type="number" value={courseForm.creditHours} onChange={handleCourseFormChange} required />
-              <select className="rounded border border-stone-300 px-3 py-2 text-sm sm:col-span-2" name="teacherId" value={courseForm.teacherId} onChange={handleCourseFormChange} required>
-                <option value="">Assign teacher</option>
-                {teachers.map((teacher) => (
-                  <option key={teacher._id} value={teacher._id}>
-                    {teacher.employeeId} - {teacher.userId?.fullName || teacher.department}
-                  </option>
-                ))}
-              </select>
+              <label className="grid gap-1 text-sm font-medium text-ink">
+                Course title
+                <input className="rounded border border-stone-300 px-3 py-2 text-sm" name="title" value={courseForm.title} onChange={handleCourseFormChange} placeholder="Database Systems" required />
+              </label>
+              <label className="grid gap-1 text-sm font-medium text-ink">
+                Course code
+                <input className="rounded border border-stone-300 px-3 py-2 text-sm" name="courseCode" value={courseForm.courseCode} onChange={handleCourseFormChange} placeholder="CS-301" required />
+              </label>
+              <label className="grid gap-1 text-sm font-medium text-ink">
+                Semester
+                <input className="rounded border border-stone-300 px-3 py-2 text-sm" min="1" max="12" name="semester" type="number" value={courseForm.semester} onChange={handleCourseFormChange} required />
+              </label>
+              <label className="grid gap-1 text-sm font-medium text-ink">
+                Credit hours
+                <input className="rounded border border-stone-300 px-3 py-2 text-sm" min="1" max="6" name="creditHours" type="number" value={courseForm.creditHours} onChange={handleCourseFormChange} required />
+              </label>
+              <label className="grid gap-1 text-sm font-medium text-ink sm:col-span-2">
+                Teacher
+                <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="teacherId" value={courseForm.teacherId} onChange={handleCourseFormChange} required>
+                  <option value="">Assign teacher</option>
+                  {teachers.map((teacher) => (
+                    <option key={teacher._id} value={teacher._id}>
+                      {teacher.employeeId} - {teacher.userId?.fullName || teacher.department}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
             <button className="mt-4 rounded bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:bg-stone-300" type="submit" disabled={saving}>
               Create Course
@@ -208,22 +223,28 @@ const CoursesPage = () => {
           <form className="rounded border border-stone-200 bg-white p-4 shadow-panel" onSubmit={createEnrollment}>
             <h2 className="text-base font-semibold text-ink">Enroll Student</h2>
             <div className="mt-4 grid gap-3">
-              <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="studentId" value={enrollmentForm.studentId} onChange={handleEnrollmentFormChange} required>
-                <option value="">Select student</option>
-                {students.map((student) => (
-                  <option key={student._id} value={student._id}>
-                    {student.registrationNumber} - {student.userId?.fullName || student.department}
-                  </option>
-                ))}
-              </select>
-              <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="courseId" value={enrollmentForm.courseId} onChange={handleEnrollmentFormChange} required>
-                <option value="">Select course</option>
-                {courses.map((course) => (
-                  <option key={course._id} value={course._id}>
-                    {course.courseCode} - {course.title}
-                  </option>
-                ))}
-              </select>
+              <label className="grid gap-1 text-sm font-medium text-ink">
+                Student
+                <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="studentId" value={enrollmentForm.studentId} onChange={handleEnrollmentFormChange} required>
+                  <option value="">Select student</option>
+                  {students.map((student) => (
+                    <option key={student._id} value={student._id}>
+                      {student.registrationNumber} - {student.userId?.fullName || student.department}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-1 text-sm font-medium text-ink">
+                Course
+                <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="courseId" value={enrollmentForm.courseId} onChange={handleEnrollmentFormChange} required>
+                  <option value="">Select course</option>
+                  {courses.map((course) => (
+                    <option key={course._id} value={course._id}>
+                      {course.courseCode} - {course.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
             <button className="mt-4 rounded bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:bg-stone-300" type="submit" disabled={saving}>
               Enroll Student

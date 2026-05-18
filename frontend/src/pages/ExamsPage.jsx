@@ -208,23 +208,35 @@ const ExamsPage = () => {
             <form className="rounded border border-stone-200 bg-white p-4 shadow-panel" onSubmit={createExam}>
               <h2 className="text-base font-semibold text-ink">Schedule Exam</h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="courseId" value={examForm.courseId} onChange={handleExamChange} required>
-                  <option value="">Course</option>
-                  {courses.map((course) => (
-                    <option key={course._id} value={course._id}>
-                      {course.courseCode} - {course.title}
-                    </option>
-                  ))}
-                </select>
-                <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="examType" value={examForm.examType} onChange={handleExamChange}>
-                  <option value="quiz">Quiz</option>
-                  <option value="midterm">Midterm</option>
-                  <option value="final">Final</option>
-                  <option value="assignment">Assignment</option>
-                  <option value="lab">Lab</option>
-                </select>
-                <input className="rounded border border-stone-300 px-3 py-2 text-sm" min="1" max="1000" name="totalMarks" type="number" value={examForm.totalMarks} onChange={handleExamChange} required />
-                <input className="rounded border border-stone-300 px-3 py-2 text-sm" name="examDate" type="date" value={examForm.examDate} onChange={handleExamChange} required />
+                <label className="grid gap-1 text-sm font-medium text-ink">
+                  Course
+                  <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="courseId" value={examForm.courseId} onChange={handleExamChange} required>
+                    <option value="">Select course</option>
+                    {courses.map((course) => (
+                      <option key={course._id} value={course._id}>
+                        {course.courseCode} - {course.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="grid gap-1 text-sm font-medium text-ink">
+                  Exam type
+                  <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="examType" value={examForm.examType} onChange={handleExamChange}>
+                    <option value="quiz">Quiz</option>
+                    <option value="midterm">Midterm</option>
+                    <option value="final">Final</option>
+                    <option value="assignment">Assignment</option>
+                    <option value="lab">Lab</option>
+                  </select>
+                </label>
+                <label className="grid gap-1 text-sm font-medium text-ink">
+                  Total marks
+                  <input className="rounded border border-stone-300 px-3 py-2 text-sm" min="1" max="1000" name="totalMarks" type="number" value={examForm.totalMarks} onChange={handleExamChange} required />
+                </label>
+                <label className="grid gap-1 text-sm font-medium text-ink">
+                  Exam date
+                  <input className="rounded border border-stone-300 px-3 py-2 text-sm" name="examDate" type="date" value={examForm.examDate} onChange={handleExamChange} required />
+                </label>
               </div>
               <button className="mt-4 rounded bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:bg-stone-300" type="submit" disabled={saving}>
                 Schedule Exam
@@ -234,23 +246,32 @@ const ExamsPage = () => {
             <form className="rounded border border-stone-200 bg-white p-4 shadow-panel" onSubmit={publishResult}>
               <h2 className="text-base font-semibold text-ink">Enter Marks</h2>
               <div className="mt-4 grid gap-3">
-                <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="examId" value={resultForm.examId} onChange={handleResultChange} required>
-                  <option value="">Exam</option>
-                  {exams.map((exam) => (
-                    <option key={exam._id} value={exam._id}>
-                      {exam.courseId?.courseCode || "Course"} - {exam.examType} - {exam.totalMarks}
-                    </option>
-                  ))}
-                </select>
-                <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="studentId" value={resultForm.studentId} onChange={handleResultChange} required>
-                  <option value="">Student</option>
-                  {students.map((student) => (
-                    <option key={student._id} value={student._id}>
-                      {student.registrationNumber} - {student.userId?.fullName || "Student"}
-                    </option>
-                  ))}
-                </select>
-                <input className="rounded border border-stone-300 px-3 py-2 text-sm" min="0" name="obtainedMarks" type="number" value={resultForm.obtainedMarks} onChange={handleResultChange} placeholder="Obtained marks" required />
+                <label className="grid gap-1 text-sm font-medium text-ink">
+                  Exam
+                  <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="examId" value={resultForm.examId} onChange={handleResultChange} required>
+                    <option value="">Select exam</option>
+                    {exams.map((exam) => (
+                      <option key={exam._id} value={exam._id}>
+                        {exam.courseId?.courseCode || "Course"} - {exam.examType} - {exam.totalMarks}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="grid gap-1 text-sm font-medium text-ink">
+                  Student
+                  <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="studentId" value={resultForm.studentId} onChange={handleResultChange} required>
+                    <option value="">Select student</option>
+                    {students.map((student) => (
+                      <option key={student._id} value={student._id}>
+                        {student.registrationNumber} - {student.userId?.fullName || "Student"}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="grid gap-1 text-sm font-medium text-ink">
+                  Obtained marks
+                  <input className="rounded border border-stone-300 px-3 py-2 text-sm" min="0" name="obtainedMarks" type="number" value={resultForm.obtainedMarks} onChange={handleResultChange} placeholder="e.g. 75" required />
+                </label>
               </div>
               <button className="mt-4 rounded bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:bg-stone-300" type="submit" disabled={saving}>
                 Publish Result

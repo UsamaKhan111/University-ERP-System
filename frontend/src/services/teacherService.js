@@ -14,6 +14,16 @@ export const teacherService = {
     return unwrapData(response);
   },
 
+  async create(payload) {
+    const response = await api.post("/api/teachers", cleanParams(payload));
+    return unwrapData(response).teacher;
+  },
+
+  async update(teacherId, payload) {
+    const response = await api.put(`/api/teachers/${teacherId}`, cleanParams(payload));
+    return unwrapData(response).teacher;
+  },
+
   async getDashboard() {
     const response = await api.get("/api/teachers/dashboard");
     return unwrapData(response);

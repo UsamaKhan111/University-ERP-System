@@ -1,0 +1,23 @@
+[
+  {
+    "fullName": "System Admin",
+    "email": "admin@example.com",
+    "password": "demo1234",
+    "role": "admin",
+    "isActive": true
+  },
+  {
+    "fullName": "Demo Teacher",
+    "email": "teacher@example.com",
+    "password": "demo1234",
+    "role": "teacher",
+    "isActive": true
+  },
+  {
+    "fullName": "Demo Student",
+    "email": "student@example.com",
+    "password": "demo1234",
+    "role": "student",
+    "isActive": true
+  }
+]

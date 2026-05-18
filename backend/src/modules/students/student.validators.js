@@ -21,9 +21,15 @@ const updateStudentSchema = z.object({
   params: z.object({
     id: objectIdSchema
   }),
-  body: studentBodySchema.partial().refine((value) => Object.keys(value).length > 0, {
-    message: "At least one field is required"
-  })
+  body: studentBodySchema
+    .partial()
+    .extend({
+      fullName: z.string().trim().min(2).max(100).optional(),
+      password: z.string().min(8, "Password must be at least 8 characters").optional()
+    })
+    .refine((value) => Object.keys(value).length > 0, {
+      message: "At least one field is required"
+    })
 });
 
 const studentIdSchema = z.object({

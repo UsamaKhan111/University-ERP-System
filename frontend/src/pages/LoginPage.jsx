@@ -1,54 +1,92 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+
+import AuthShell from "../components/AuthShell";
 import { useAuth } from "../context/AuthContext";
 
 const LoginPage = () => {
+  const [apiError, setApiError] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [connectionError, setConnectionError] = useState(false);
+  const location = useLocation();
+  const {
+    formState: { errors, isSubmitting },
+    handleSubmit,
+    register
+  } = useForm({
+    defaultValues: { email: "", password: "" }
+  });
 
-  useEffect(() => {
-    const silentLogin = async () => {
-      try {
-        // Perform an immediate login and redirect without any UI flicker
-        await login({ email: "admin@example.com", password: "demo" });
-        navigate("/", { replace: true });
-      } catch (err) {
-        // Caught net::ERR_CONNECTION_REFUSED
-        console.error("Backend unreachable. Ensure server is running on port 5000.", err);
-        setConnectionError(true);
+  const redirectTo = location.state?.from?.pathname || "/";
+
+  const onSubmit = async (values) => {
+    setApiError("");
+    try {
+      await login(values);
+      navigate(redirectTo, { replace: true });
+    } catch (error) {
+      const status = error.response?.status;
+      if (!status && error.message?.includes("Network")) {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        setApiError(`Cannot reach the backend at ${apiUrl}. Make sure it is running.`);
+        return;
       }
-    };
-    silentLogin();
-  }, [login, navigate]);
+      setApiError(error.response?.data?.message || "Login failed");
+    }
+  };
 
-  // Show troubleshooting guide if the backend connection fails
-  if (connectionError) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-stone-50 p-6">
-        <div className="w-full max-w-md rounded-xl border border-stone-200 bg-white p-8 shadow-xl">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+  return (
+    <AuthShell eyebrow="Sign in" title="Login">
+      <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)}>
+        {apiError ? (
+          <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {apiError}
           </div>
-          <h1 className="text-xl font-bold text-stone-900">Backend Connection Refused</h1>
-          <p className="mt-2 text-stone-600">The ERP system cannot reach the API at <code className="text-red-600 font-bold">localhost:5000</code>.</p>
-          <div className="mt-6 space-y-4">
-            <div className="rounded-lg bg-stone-900 p-4 text-xs font-mono text-stone-300">
-              <p># Run this in your /backend folder:</p>
-              <p className="text-brand-400">npm run dev</p>
-            </div>
-            <button onClick={() => window.location.reload()} className="w-full rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
-              I've started the server, Refresh
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+        ) : null}
 
-  return null;
+        <label className="grid gap-1 text-sm font-medium text-ink">
+          Email
+          <input
+            className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100"
+            type="email"
+            autoComplete="email"
+            {...register("email", {
+              required: "Email is required",
+              pattern: { value: /^\S+@\S+\.\S+$/, message: "Email must be valid" }
+            })}
+          />
+          {errors.email ? <span className="text-xs text-red-600">{errors.email.message}</span> : null}
+        </label>
+
+        <label className="grid gap-1 text-sm font-medium text-ink">
+          Password
+          <input
+            className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100"
+            type="password"
+            autoComplete="current-password"
+            {...register("password", { required: "Password is required" })}
+          />
+          {errors.password ? <span className="text-xs text-red-600">{errors.password.message}</span> : null}
+        </label>
+
+        <button
+          className="rounded bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-stone-300"
+          type="submit"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Signing in..." : "Sign in"}
+        </button>
+      </form>
+
+      <p className="mt-5 text-sm text-stone-600">
+        New to the system?{" "}
+        <Link className="font-medium text-brand-700 hover:text-brand-600" to="/register">
+          Register
+        </Link>
+      </p>
+    </AuthShell>
+  );
 };
 
 export default LoginPage;
