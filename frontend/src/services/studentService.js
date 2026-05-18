@@ -14,6 +14,16 @@ export const studentService = {
     return unwrapData(response);
   },
 
+  async create(payload) {
+    const response = await api.post("/api/students", cleanParams(payload));
+    return unwrapData(response).student;
+  },
+
+  async update(studentId, payload) {
+    const response = await api.put(`/api/students/${studentId}`, cleanParams(payload));
+    return unwrapData(response).student;
+  },
+
   async getById(studentId) {
     const response = await api.get(`/api/students/${studentId}`);
     return unwrapData(response).student;

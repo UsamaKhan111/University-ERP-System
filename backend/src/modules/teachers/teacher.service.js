@@ -85,6 +85,62 @@ const createTeacher = async (payload) => {
   return Teacher.findById(teacher._id).populate(teacherPopulate).lean();
 };
 
+const updateTeacher = async (teacherId, payload) => {
+  const { fullName, password, ...teacherPayload } = payload;
+
+  if (teacherPayload.userId) {
+    await ensureTeacherUser(teacherPayload.userId);
+  }
+
+  if (teacherPayload.employeeId) {
+    const duplicateEmployee = await Teacher.findOne({
+      _id: { $ne: teacherId },
+      employeeId: teacherPayload.employeeId
+    });
+
+    if (duplicateEmployee) {
+      throw new ApiError(409, "Employee ID already exists");
+    }
+  }
+
+  if (teacherPayload.userId) {
+    const duplicateUser = await Teacher.findOne({
+      _id: { $ne: teacherId },
+      userId: teacherPayload.userId
+    });
+
+    if (duplicateUser) {
+      throw new ApiError(409, "Teacher profile already exists for this user");
+    }
+  }
+
+  const existing = await Teacher.findById(teacherId);
+
+  if (!existing) {
+    throw new ApiError(404, "Teacher profile not found");
+  }
+
+  if (fullName !== undefined || password !== undefined) {
+    const linkedUserId = teacherPayload.userId || existing.userId;
+    const linkedUser = await User.findById(linkedUserId).select("+password");
+    if (!linkedUser) {
+      throw new ApiError(404, "Linked user account not found");
+    }
+    if (fullName !== undefined) linkedUser.fullName = fullName;
+    if (password !== undefined) linkedUser.password = password;
+    await linkedUser.save();
+  }
+
+  if (Object.keys(teacherPayload).length > 0) {
+    await Teacher.findByIdAndUpdate(teacherId, teacherPayload, {
+      new: true,
+      runValidators: true
+    });
+  }
+
+  return Teacher.findById(teacherId).populate(teacherPopulate).lean();
+};
+
 const getDashboardForUser = async (userId) => {
   const teacher = await Teacher.findOne({ userId }).populate(teacherPopulate).populate(coursePopulate).lean();
 
@@ -129,5 +185,6 @@ const getDashboardForUser = async (userId) => {
 module.exports = {
   createTeacher,
   getDashboardForUser,
-  listTeachers
+  listTeachers,
+  updateTeacher
 };

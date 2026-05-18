@@ -25,10 +25,13 @@ Database Management System semester project using:
 ```bash
 cd backend
 npm install
+npm run seed   # one-time: creates demo users from seeds/users.seed.json
 npm run dev
 ```
 
-Create `backend/.env` from `backend/.env.example` and set `MONGODB_URI` to your MongoDB Atlas connection string before starting the API.
+Create `backend/.env` from `backend/.env.example` and set `MONGODB_URI` (local: `mongodb://127.0.0.1:27017/smart-university-erp`, Atlas: your cluster URI) and `JWT_SECRET` before starting the API.
+
+`npm run seed` is idempotent — existing users are skipped. Pass `--force` to overwrite them: `npm run seed -- --force`. Edit `backend/seeds/users.seed.json` to change the default accounts (admin/teacher/student) seeded for local development.
 
 ### Frontend
 ```bash

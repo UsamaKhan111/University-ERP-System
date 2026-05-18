@@ -1,7 +1,15 @@
 import axios from "axios";
 
+const baseURL = import.meta.env.VITE_API_URL;
+
+if (!baseURL) {
+  throw new Error(
+    "VITE_API_URL is not set. Create frontend/.env (copy from frontend/.env.example) and restart `npm run dev`."
+  );
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000",
+  baseURL,
   headers: {
     "Content-Type": "application/json"
   }

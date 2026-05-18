@@ -122,14 +122,16 @@ const createStudent = async (payload) => {
 };
 
 const updateStudent = async (studentId, payload) => {
-  if (payload.userId) {
-    await ensureStudentUser(payload.userId);
+  const { fullName, password, ...studentPayload } = payload;
+
+  if (studentPayload.userId) {
+    await ensureStudentUser(studentPayload.userId);
   }
 
-  if (payload.registrationNumber) {
+  if (studentPayload.registrationNumber) {
     const duplicateRegistration = await Student.findOne({
       _id: { $ne: studentId },
-      registrationNumber: payload.registrationNumber
+      registrationNumber: studentPayload.registrationNumber
     });
 
     if (duplicateRegistration) {
@@ -137,10 +139,10 @@ const updateStudent = async (studentId, payload) => {
     }
   }
 
-  if (payload.userId) {
+  if (studentPayload.userId) {
     const duplicateUser = await Student.findOne({
       _id: { $ne: studentId },
-      userId: payload.userId
+      userId: studentPayload.userId
     });
 
     if (duplicateUser) {
@@ -148,18 +150,31 @@ const updateStudent = async (studentId, payload) => {
     }
   }
 
-  const student = await Student.findByIdAndUpdate(studentId, payload, {
-    new: true,
-    runValidators: true
-  })
-    .populate(studentPopulate)
-    .lean();
+  const existing = await Student.findById(studentId);
 
-  if (!student) {
+  if (!existing) {
     throw new ApiError(404, "Student profile not found");
   }
 
-  return student;
+  if (fullName !== undefined || password !== undefined) {
+    const linkedUserId = studentPayload.userId || existing.userId;
+    const linkedUser = await User.findById(linkedUserId).select("+password");
+    if (!linkedUser) {
+      throw new ApiError(404, "Linked user account not found");
+    }
+    if (fullName !== undefined) linkedUser.fullName = fullName;
+    if (password !== undefined) linkedUser.password = password;
+    await linkedUser.save();
+  }
+
+  if (Object.keys(studentPayload).length > 0) {
+    await Student.findByIdAndUpdate(studentId, studentPayload, {
+      new: true,
+      runValidators: true
+    });
+  }
+
+  return getStudentById(studentId);
 };
 
 const deleteStudent = async (studentId) => {

@@ -3,7 +3,21 @@ import { Link } from "react-router-dom";
 
 import StudentProfilePanel from "../components/StudentProfilePanel";
 import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
 import { studentService } from "../services/studentService";
+
+const emptyCreateForm = {
+  fullName: "",
+  email: "",
+  password: "",
+  registrationNumber: "",
+  department: "",
+  semester: 1,
+  session: "",
+  guardianName: "",
+  phone: "",
+  address: ""
+};
 
 const defaultPagination = {
   limit: 10,
@@ -15,6 +29,7 @@ const defaultPagination = {
 const StudentsPage = () => {
   const { user } = useAuth();
   const isStudent = user?.role === "student";
+  const isAdmin = user?.role === "admin";
   const [formFilters, setFormFilters] = useState({
     department: "",
     search: "",
@@ -34,6 +49,15 @@ const StudentsPage = () => {
   const [pagination, setPagination] = useState(defaultPagination);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [createForm, setCreateForm] = useState(emptyCreateForm);
+  const [creating, setCreating] = useState(false);
+  const [createNotice, setCreateNotice] = useState("");
+  const [createError, setCreateError] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [editNotice, setEditNotice] = useState("");
+  const [editError, setEditError] = useState("");
 
   const activeFilterCount = useMemo(() => {
     return ["department", "search", "semester"].filter((key) => Boolean(filters[key])).length;
@@ -126,6 +150,109 @@ const StudentsPage = () => {
     }));
   };
 
+  const handleCreateChange = (event) => {
+    const { name, value } = event.target;
+    setCreateForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const startEdit = (student) => {
+    setEditingId(student._id);
+    setEditForm({
+      fullName: student.userId?.fullName || "",
+      password: "",
+      registrationNumber: student.registrationNumber || "",
+      department: student.department || "",
+      semester: student.semester || 1,
+      session: student.session || "",
+      guardianName: student.guardianName || "",
+      phone: student.phone || "",
+      address: student.address || ""
+    });
+    setEditNotice("");
+    setEditError("");
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditForm(null);
+    setEditNotice("");
+    setEditError("");
+  };
+
+  const handleEditChange = (event) => {
+    const { name, value } = event.target;
+    setEditForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const submitEdit = async (event) => {
+    event.preventDefault();
+    if (!editingId || !editForm) return;
+    setEditing(true);
+    setEditNotice("");
+    setEditError("");
+
+    try {
+      const payload = {
+        fullName: editForm.fullName,
+        registrationNumber: editForm.registrationNumber,
+        department: editForm.department,
+        semester: Number(editForm.semester),
+        session: editForm.session,
+        guardianName: editForm.guardianName,
+        phone: editForm.phone,
+        address: editForm.address
+      };
+      if (editForm.password && editForm.password.length > 0) {
+        payload.password = editForm.password;
+      }
+      await studentService.update(editingId, payload);
+      setEditNotice("Student updated");
+      setEditingId(null);
+      setEditForm(null);
+      setFilters((current) => ({ ...current }));
+    } catch (requestError) {
+      setEditError(requestError.response?.data?.message || "Unable to update student");
+    } finally {
+      setEditing(false);
+    }
+  };
+
+  const createStudent = async (event) => {
+    event.preventDefault();
+    setCreating(true);
+    setCreateNotice("");
+    setCreateError("");
+
+    try {
+      const registerResponse = await api.post("/api/auth/register", {
+        fullName: createForm.fullName,
+        email: createForm.email,
+        password: createForm.password,
+        role: "student"
+      });
+      const newUserId = registerResponse.data.data.user._id;
+
+      await studentService.create({
+        userId: newUserId,
+        registrationNumber: createForm.registrationNumber,
+        department: createForm.department,
+        semester: Number(createForm.semester),
+        session: createForm.session,
+        guardianName: createForm.guardianName,
+        phone: createForm.phone,
+        address: createForm.address
+      });
+
+      setCreateNotice(`Student ${createForm.registrationNumber} created`);
+      setCreateForm(emptyCreateForm);
+      setFilters((current) => ({ ...current, page: 1 }));
+    } catch (requestError) {
+      setCreateError(requestError.response?.data?.message || "Unable to create student");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   if (isStudent) {
     return (
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-6 sm:px-6 lg:px-8">
@@ -165,6 +292,66 @@ const StudentsPage = () => {
           <p className="mt-2 text-2xl font-semibold text-ink">{activeFilterCount}</p>
         </article>
       </div>
+
+      {isAdmin ? (
+        <form className="rounded border border-stone-200 bg-white p-4 shadow-panel" onSubmit={createStudent}>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold text-ink">Add Student</h2>
+            <p className="text-xs text-stone-500">Creates a user account and the linked student profile.</p>
+          </div>
+          {createNotice ? (
+            <p className="mt-3 rounded border border-brand-100 bg-brand-50 px-3 py-2 text-sm text-brand-700">{createNotice}</p>
+          ) : null}
+          {createError ? (
+            <p className="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{createError}</p>
+          ) : null}
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Full name
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="fullName" value={createForm.fullName} onChange={handleCreateChange} required />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Email
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="email" type="email" value={createForm.email} onChange={handleCreateChange} required />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Password (min 8)
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="password" type="password" minLength={8} value={createForm.password} onChange={handleCreateChange} required />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Registration number
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="registrationNumber" value={createForm.registrationNumber} onChange={handleCreateChange} placeholder="e.g. CS-2024-001" required />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Department
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="department" value={createForm.department} onChange={handleCreateChange} placeholder="Computer Science" required />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Semester
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="semester" type="number" min="1" max="12" value={createForm.semester} onChange={handleCreateChange} required />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Session
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="session" value={createForm.session} onChange={handleCreateChange} placeholder="2024-2028" required />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Guardian name (optional)
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="guardianName" value={createForm.guardianName} onChange={handleCreateChange} />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Phone (optional)
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="phone" value={createForm.phone} onChange={handleCreateChange} />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink md:col-span-3">
+              Address (optional)
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="address" value={createForm.address} onChange={handleCreateChange} />
+            </label>
+          </div>
+          <button className="mt-4 rounded bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-stone-300" type="submit" disabled={creating}>
+            {creating ? "Adding..." : "Add Student"}
+          </button>
+        </form>
+      ) : null}
 
       <form className="rounded border border-stone-200 bg-white p-4 shadow-panel" onSubmit={handleSubmit}>
         <div className="grid gap-3 md:grid-cols-[1.4fr_1fr_160px_auto_auto] md:items-end">
@@ -213,6 +400,65 @@ const StudentsPage = () => {
         </div>
       </form>
 
+      {editNotice ? (
+        <p className="rounded border border-brand-100 bg-brand-50 px-3 py-2 text-sm text-brand-700">{editNotice}</p>
+      ) : null}
+
+      {isAdmin && editingId && editForm ? (
+        <form className="rounded border border-stone-200 bg-white p-4 shadow-panel" onSubmit={submitEdit}>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold text-ink">Edit Student</h2>
+            <button className="text-sm text-stone-500 hover:text-ink" type="button" onClick={cancelEdit}>
+              Cancel
+            </button>
+          </div>
+          {editError ? (
+            <p className="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{editError}</p>
+          ) : null}
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Full name
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="fullName" value={editForm.fullName} onChange={handleEditChange} required />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              New password (leave blank to keep current)
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="password" type="password" minLength={8} value={editForm.password} onChange={handleEditChange} placeholder="Min 8 characters" />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Registration number
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="registrationNumber" value={editForm.registrationNumber} onChange={handleEditChange} required />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Department
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="department" value={editForm.department} onChange={handleEditChange} required />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Semester
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="semester" type="number" min="1" max="12" value={editForm.semester} onChange={handleEditChange} required />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Session
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="session" value={editForm.session} onChange={handleEditChange} required />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Guardian name (optional)
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="guardianName" value={editForm.guardianName} onChange={handleEditChange} />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink">
+              Phone (optional)
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="phone" value={editForm.phone} onChange={handleEditChange} />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-ink md:col-span-3">
+              Address (optional)
+              <input className="rounded border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" name="address" value={editForm.address} onChange={handleEditChange} />
+            </label>
+          </div>
+          <button className="mt-4 rounded bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-stone-300" type="submit" disabled={editing}>
+            {editing ? "Saving..." : "Save changes"}
+          </button>
+        </form>
+      ) : null}
+
       <section className="overflow-hidden rounded border border-stone-200 bg-white shadow-panel">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-stone-200 text-left text-sm">
@@ -223,7 +469,7 @@ const StudentsPage = () => {
                 <th className="px-4 py-3 font-semibold">Department</th>
                 <th className="px-4 py-3 font-semibold">Semester</th>
                 <th className="px-4 py-3 font-semibold">Session</th>
-                <th className="px-4 py-3 font-semibold">Profile</th>
+                <th className="px-4 py-3 font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-200">
@@ -235,9 +481,16 @@ const StudentsPage = () => {
                   <td className="px-4 py-3 text-stone-700">{student.semester}</td>
                   <td className="px-4 py-3 text-stone-700">{student.session}</td>
                   <td className="px-4 py-3">
-                    <Link className="font-medium text-brand-700 hover:text-brand-600" to={`/students/${student._id}`}>
-                      View
-                    </Link>
+                    <div className="flex gap-3">
+                      <Link className="font-medium text-brand-700 hover:text-brand-600" to={`/students/${student._id}`}>
+                        View
+                      </Link>
+                      {isAdmin ? (
+                        <button className="font-medium text-brand-700 hover:text-brand-600" type="button" onClick={() => startEdit(student)}>
+                          Edit
+                        </button>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ))}

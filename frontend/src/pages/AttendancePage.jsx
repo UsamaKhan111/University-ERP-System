@@ -199,40 +199,55 @@ const AttendancePage = () => {
           <form className="rounded border border-stone-200 bg-white p-4 shadow-panel" onSubmit={markAttendance}>
             <h2 className="text-base font-semibold text-ink">Mark Attendance</h2>
             <div className="mt-4 grid gap-3 md:grid-cols-5">
-              <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="studentId" value={form.studentId} onChange={handleChange} required>
-                <option value="">Student</option>
-                {students.map((student) => (
-                  <option key={student._id} value={student._id}>
-                    {student.registrationNumber}
-                  </option>
-                ))}
-              </select>
-              <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="courseId" value={form.courseId} onChange={handleChange} required>
-                <option value="">Course</option>
-                {courses.map((course) => (
-                  <option key={course._id} value={course._id}>
-                    {course.courseCode}
-                  </option>
-                ))}
-              </select>
-              {isTeacher ? (
-                <input className="rounded border border-stone-300 px-3 py-2 text-sm" value={teacherProfile?.employeeId || "Teacher"} disabled />
-              ) : (
-                <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="teacherId" value={form.teacherId} onChange={handleChange} required>
-                  <option value="">Teacher</option>
-                  {teachers.map((teacher) => (
-                    <option key={teacher._id} value={teacher._id}>
-                      {teacher.employeeId}
+              <label className="grid gap-1 text-sm font-medium text-ink">
+                Student
+                <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="studentId" value={form.studentId} onChange={handleChange} required>
+                  <option value="">Select student</option>
+                  {students.map((student) => (
+                    <option key={student._id} value={student._id}>
+                      {student.registrationNumber}
                     </option>
                   ))}
                 </select>
-              )}
-              <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="status" value={form.status} onChange={handleChange}>
-                <option value="present">Present</option>
-                <option value="absent">Absent</option>
-                <option value="leave">Leave</option>
-              </select>
-              <input className="rounded border border-stone-300 px-3 py-2 text-sm" name="lectureDate" type="date" value={form.lectureDate} onChange={handleChange} required />
+              </label>
+              <label className="grid gap-1 text-sm font-medium text-ink">
+                Course
+                <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="courseId" value={form.courseId} onChange={handleChange} required>
+                  <option value="">Select course</option>
+                  {courses.map((course) => (
+                    <option key={course._id} value={course._id}>
+                      {course.courseCode}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-1 text-sm font-medium text-ink">
+                Teacher
+                {isTeacher ? (
+                  <input className="rounded border border-stone-300 px-3 py-2 text-sm" value={teacherProfile?.employeeId || "Teacher"} disabled />
+                ) : (
+                  <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="teacherId" value={form.teacherId} onChange={handleChange} required>
+                    <option value="">Select teacher</option>
+                    {teachers.map((teacher) => (
+                      <option key={teacher._id} value={teacher._id}>
+                        {teacher.employeeId}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </label>
+              <label className="grid gap-1 text-sm font-medium text-ink">
+                Status
+                <select className="rounded border border-stone-300 px-3 py-2 text-sm" name="status" value={form.status} onChange={handleChange}>
+                  <option value="present">Present</option>
+                  <option value="absent">Absent</option>
+                  <option value="leave">Leave</option>
+                </select>
+              </label>
+              <label className="grid gap-1 text-sm font-medium text-ink">
+                Lecture date
+                <input className="rounded border border-stone-300 px-3 py-2 text-sm" name="lectureDate" type="date" value={form.lectureDate} onChange={handleChange} required />
+              </label>
             </div>
             <button className="mt-4 rounded bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:bg-stone-300" type="submit" disabled={saving}>
               Mark Attendance
